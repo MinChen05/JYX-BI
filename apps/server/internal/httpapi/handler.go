@@ -11,6 +11,7 @@ import (
 	"github.com/MinChen05/JYX-BI/internal/service"
 
 	"github.com/MinChen05/JYX-BI/internal/engine"
+	"github.com/MinChen05/JYX-BI/internal/template"
 )
 
 func (d *deps) respondOK(c *gin.Context, data any) {
@@ -169,4 +170,70 @@ func (d *deps) submissions(c *gin.Context) {
 		return
 	}
 	d.respondOK(c, out)
+}
+
+// ===== 设计器（模板管理 + SQL 预览） =====
+
+func (d *deps) listTemplates(c *gin.Context) {
+	d.respondOK(c, d.svc.ListTemplates())
+}
+
+func (d *deps) getTemplate(c *gin.Context) {
+	def, raw, err := d.svc.GetTemplate(c.Param("code"))
+	if err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	d.respondOK(c, gin.H{"def": def, "raw": raw})
+}
+
+func (d *deps) saveTemplate(c *gin.Context) {
+	var req struct {
+		Code string `json:"code"`
+		YAML string `json:"yaml"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	if err := d.svc.SaveTemplate(req.Code, []byte(req.YAML)); err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	d.respondOK(c, gin.H{"saved": req.Code})
+}
+
+func (d *deps) deleteTemplate(c *gin.Context) {
+	if err := d.svc.DeleteTemplate(c.Param("code")); err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	d.respondOK(c, gin.H{"deleted": c.Param("code")})
+}
+
+func (d *deps) sqlPreview(c *gin.Context) {
+	var req struct {
+		Source    string             `json:"source"`
+		SQL       string             `json:"sql"`
+		ParamsDef []template.ParamDef `json:"params_def"`
+		Values    map[string]string  `json:"values"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	out, err := d.svc.SqlPreview(req.Source, req.SQL, req.ParamsDef, req.Values)
+	if err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	d.respondOK(c, out)
+}
+
+func (d *deps) reloadTemplates(c *gin.Context) {
+	if err := d.svc.ReloadTemplates(); err != nil {
+		d.respondErr(c, err)
+		return
+	}
+	d.respondOK(c, gin.H{"reloaded": true})
 }

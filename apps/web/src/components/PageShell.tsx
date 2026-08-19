@@ -1,4 +1,4 @@
-import { AppstoreOutlined, TableOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BuildOutlined, TableOutlined } from '@ant-design/icons';
 import React from 'react';
 
 type RailItem = { key: string; label: string; icon: React.ReactNode; path: string };
@@ -6,10 +6,11 @@ type RailItem = { key: string; label: string; icon: React.ReactNode; path: strin
 const RAIL: RailItem[] = [
   { key: 'catalog', label: '目录', icon: <AppstoreOutlined />, path: '/portal' },
   { key: 'list', label: '报表清单', icon: <TableOutlined />, path: '/reports' },
+  { key: 'designer', label: '报表设计', icon: <BuildOutlined />, path: '/designer' },
 ];
 
 /**
- * 帆软式页面壳：左侧窄图标栏（目录/报表清单）+ 右侧内容，
+ * 帆软式页面壳：左侧窄图标栏（目录/报表清单/报表设计）+ 右侧内容，
  * 与深色顶栏（navTheme: dark）组成帆软工作台的三栏结构。
  */
 const PageShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {

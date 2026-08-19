@@ -75,3 +75,20 @@ spec:
 - [ ] Doris 建对应 fact 表（Unique Key 与 on_conflict 语义一致）
 - [ ] 如需行集主数据，确认 Doris 里 dim 表已就位（kingdeesync 同步）
 - [ ] 导出→改一格→覆盖导入 手工走一遍
+
+## 报表设计器（/designer）
+
+Web 端模板设计页面（左侧模板列表 / 中间 YAML 编辑器 / 右侧 SQL 预览），对应后端 `/api/admin/*`：
+
+| 操作 | 接口 | 说明 |
+| --- | --- | --- |
+| 列表 | `GET /api/admin/templates` | code/name/version/group/has_submit |
+| 查看 | `GET /api/admin/templates/:code` | 解析后的 def + 原始 YAML |
+| 保存 | `POST /api/admin/templates` `{code, yaml}` | 原始 YAML 落文件（保留注释）→ 解析 → 热重载 → 样例参数编译；任一失败回滚文件 |
+| 删除 | `DELETE /api/admin/templates/:code` | 删文件 + 热重载（不影响已提交数据） |
+| 重载 | `POST /api/admin/reload` | 手工改过 YAML 后让运行中的服务生效 |
+| SQL 预览 | `POST /api/admin/sql-preview` `{source, sql, params_def, values}` | 仅单条 SELECT/WITH，`{key}` 参数过白名单校验；mssql 剥末尾 ORDER BY 后包 `TOP 100` 派生表，doris 包 `LIMIT 100`；15s 超时 |
+
+「生成列」：按预览结果的列名与推断类型（INT→int / DECIMAL·MONEY·FLOAT→money / DATE·DATETIME→date / 其余→text）生成 `columns:` 段，可一键替换模板中现有段（**覆盖全部列属性**，dynamic/readonly 等会丢失）或复制。
+
+注意：设计器保存的是"样例参数下能编译通过"的模板；SQL 的真实执行只在预览/打开填报页时发生。

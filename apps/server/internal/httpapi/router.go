@@ -35,5 +35,15 @@ func NewRouter(svc *service.Service, ginMode, version string) *gin.Engine {
 		api.GET("/:code/selfcheck", d.selfcheck)
 		api.GET("/:code/submissions", d.submissions)
 	}
+
+	admin := r.Group("/api/admin")
+	{
+		admin.GET("/templates", d.listTemplates)
+		admin.POST("/templates", d.saveTemplate)
+		admin.GET("/templates/:code", d.getTemplate)
+		admin.DELETE("/templates/:code", d.deleteTemplate)
+		admin.POST("/sql-preview", d.sqlPreview)
+		admin.POST("/reload", d.reloadTemplates)
+	}
 	return r
 }

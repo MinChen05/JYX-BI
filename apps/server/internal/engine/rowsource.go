@@ -105,6 +105,9 @@ func normalizeCell(v any) any {
 	}
 }
 
+// NormalizeCell 驱动返回值统一转 JSON 友好类型（normalizeCell 的导出包装，供 SQL 预览等复用）。
+func NormalizeCell(v any) any { return normalizeCell(v) }
+
 // ReplaceTokens 通用 {param} 替换（供其他模块复用）。
 func ReplaceTokens(s string, params map[string]string) string {
 	return tokenRe.ReplaceAllStringFunc(s, func(m string) string {

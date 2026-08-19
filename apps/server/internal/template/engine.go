@@ -30,6 +30,7 @@ type Compiled struct {
 // Engine 模板注册表 + 编译缓存。
 type Engine struct {
 	defs  map[string]*ReportDef
+	mu    sync.RWMutex
 	cache sync.Map
 }
 
@@ -41,7 +42,23 @@ func NewEngine(dir string) (*Engine, error) {
 	return &Engine{defs: defs}, nil
 }
 
+// Reload 重新加载模板目录（设计器保存 / 手工改 YAML 后热生效）。
+// 加载失败时保留旧模板。
+func (e *Engine) Reload(dir string) error {
+	defs, err := LoadDir(dir)
+	if err != nil {
+		return err
+	}
+	e.mu.Lock()
+	e.defs = defs
+	e.mu.Unlock()
+	e.cache = sync.Map{}
+	return nil
+}
+
 func (e *Engine) Codes() []string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	codes := make([]string, 0, len(e.defs))
 	for c := range e.defs {
 		codes = append(codes, c)
@@ -51,6 +68,8 @@ func (e *Engine) Codes() []string {
 }
 
 func (e *Engine) Get(code string) (*ReportDef, bool) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	d, ok := e.defs[code]
 	return d, ok
 }
@@ -60,7 +79,9 @@ func (e *Engine) Compile(code string, params map[string]string) (*Compiled, erro
 	if c, ok := e.cache.Load(key); ok {
 		return c.(*Compiled), nil
 	}
+	e.mu.RLock()
 	def, ok := e.defs[code]
+	e.mu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("report %s not found", code)
 	}
