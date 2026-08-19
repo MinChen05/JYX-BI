@@ -1,0 +1,41 @@
+apiVersion: rpt/v1
+kind: Report
+metadata:
+  code: material_price_monthly
+  name: 大宗材料价格填报
+  version: 1
+spec:
+  params:
+    - { key: biz_date, label: 业务日期, type: month, required: true }
+  rows:
+    source: sql
+    query: "SELECT name AS material, category FROM dim_material WHERE active = 1 ORDER BY category, name"
+    editable_rows: false
+  columns:
+    - { key: material, label: 材料名称, type: text, readonly: true, width: 140 }
+    - { key: category, label: 材料分类, type: text, readonly: true }
+    - { key: avg, label: 均价, type: money, readonly: true, formula: "avg(d01..d31)" }
+    - { key: day, type: money,
+        dynamic: { expr: "days(param.biz_date)", key: "d{day:02}", label: "{biz_date:MM}-{day:02}" } }
+  validation:
+    - { cols: ["d.*"], rule: "v >= 0" }
+  import:
+    mode: overwrite
+    match_keys: [material]
+    on_unmatched: report
+  export:
+    layout:
+      freeze_header: true
+      number_format: "#,##0"
+  submit:
+    doris:
+      table: rpt.fact_material_price
+      mapping:
+        "param.biz_date": biz_date
+        material: material
+        category: category
+        avg: avg_price
+        "d{day}": "d{day}"
+    lock_after: true
+  push:
+    - { channel: dingtalk, to: price-group, on: submit }

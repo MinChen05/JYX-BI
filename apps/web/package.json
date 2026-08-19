@@ -1,0 +1,38 @@
+{
+  "name": "kingdee-rpt-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "金蝶报表平台 - 填报/报表前端",
+  "scripts": {
+    "dev": "cross-env UMI_ENV=dev MOCK=none PORT=8001 max dev",
+    "build": "max build --config config.prod.ts",
+    "preview": "max preview --port 8000",
+    "tsc": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.2",
+    "@ant-design/pro-components": "^3.1.14-2",
+    "@tanstack/react-query": "^5.101.2",
+    "antd": "^6.5.1",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.21",
+    "handsontable": "^14.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@umijs/max": "^4.6.75",
+    "cross-env": "^10.1.0",
+    "typescript": "^7.0.2"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

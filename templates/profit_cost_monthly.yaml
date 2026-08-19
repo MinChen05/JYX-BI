@@ -1,0 +1,45 @@
+apiVersion: rpt/v1
+kind: Report
+metadata:
+  code: profit_cost_monthly
+  name: 利润分析成本填报
+  version: 1
+spec:
+  params:
+    - { key: biz_date, label: 日期, type: month, required: true }
+  rows:
+    source: sql
+    query: "SELECT cust_no, name, salesman, category FROM dim_customer WHERE active = 1 ORDER BY cust_no"
+    editable_rows: false
+  columns:
+    - { key: seq, label: 序号, type: auto, readonly: true }
+    - { key: cust_no, label: 客户编号, type: text, readonly: true, width: 180 }
+    - { key: name, label: 客户, type: text, readonly: true, width: 260 }
+    - { key: salesman, label: 客户业务员, type: text, readonly: true }
+    - { key: category, label: 客户分类, type: text, readonly: true }
+    - { key: cost, label: 成本金额, type: money }
+    - { key: biz_date, label: 业务日期, type: month }
+  validation:
+    - { cols: ["cost"], rule: "v >= 0" }
+  import:
+    mode: overwrite
+    match_keys: [cust_no]
+    on_unmatched: report
+  export:
+    layout:
+      freeze_header: true
+      number_format: "#,##0.00"
+  submit:
+    doris:
+      table: rpt.fact_profit_cost
+      mapping:
+        cust_no: cust_no
+        name: cust_name
+        salesman: salesman
+        category: category
+        cost: cost
+        biz_date: biz_date
+    lock_after: true
+  push:
+    - { channel: email, to: cost.owner, on: submit }
+    - { channel: dingtalk, to: cost-group, on: submit }

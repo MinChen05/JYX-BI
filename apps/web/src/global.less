@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+}
+
+.rpt-grid-holder {
+  margin-top: 16px;
+  height: calc(100vh - 320px);
+  min-height: 360px;
+  border: 1px solid #f0f0f0;
+}
+
+/* 打印：只留网格 */
+@media print {
+  .ant-pro-layout-container,
+  .ant-pro-grid-content,
+  .ant-pro-layout-header,
+  .ant-pro-layout-sider,
+  .ant-card-extra,
+  .ant-btn,
+  .ant-drawer,
+  .ant-modal {
+    display: none !important;
+  }
+  .ant-card-body {
+    padding: 0 !important;
+  }
+  .rpt-grid-holder {
+    height: auto !important;
+    border: none;
+  }
+}

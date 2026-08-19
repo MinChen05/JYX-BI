@@ -1,0 +1,26 @@
+# Go
+apps/server/bin/
+*.exe
+*.test
+*.out
+
+# Node
+node_modules/
+dist/
+web-dist/
+.umi/
+.umi-production/
+npm-debug.log*
+
+# 构建产物
+bin/
+out/
+
+# 本地配置（含 DSN/密码，禁止入库）
+config.ini
+*.local.ini
+
+# 其他
+.DS_Store
+coverage/
+*.log

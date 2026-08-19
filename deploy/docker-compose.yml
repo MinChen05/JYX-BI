@@ -1,0 +1,29 @@
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: kingdee-rpt:dev
+    ports:
+      - "8090:8090"
+    volumes:
+      - ../apps/server/config.ini:/app/config.ini:ro
+      - ../templates:/app/templates:ro
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: kingdee_rpt
+    ports:
+      - "33061:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../apps/server/internal/store/sql/001_mysql.sql:/docker-entrypoint-initdb.d/001.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+
+volumes:
+  mysql-data:

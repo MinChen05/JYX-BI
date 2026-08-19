@@ -1,0 +1,65 @@
+apiVersion: rpt/v1
+kind: Report
+metadata:
+  code: sales_forecast_year
+  name: 销售年度预测填报
+  version: 1
+spec:
+  params: []
+  rows:
+    source: static
+    editable_rows: true
+    static_rows:
+      - { year: 2025, ftype: "2025" }
+      - { year: 2026, ftype: "2026" }
+  columns:
+    - { key: seq, label: 序号, type: auto, readonly: true }
+    - { key: year, label: 年度, type: int }
+    - { key: ftype, label: 预测类型, type: text }
+    - { key: m01, label: 1月, type: money }
+    - { key: m02, label: 2月, type: money }
+    - { key: m03, label: 3月, type: money }
+    - { key: m04, label: 4月, type: money }
+    - { key: m05, label: 5月, type: money }
+    - { key: m06, label: 6月, type: money }
+    - { key: m07, label: 7月, type: money }
+    - { key: m08, label: 8月, type: money }
+    - { key: m09, label: 9月, type: money }
+    - { key: m10, label: 10月, type: money }
+    - { key: m11, label: 11月, type: money }
+    - { key: m12, label: 12月, type: money }
+    - { key: total, label: 合计, type: money, readonly: true, formula: "sum(m01..m12)" }
+  validation:
+    - { cols: ["year"], rule: "v >= 2020 && v <= 2035" }
+    - { cols: ["m01..m12"], rule: "v >= 0" }
+    - { rule: "unique(year, ftype)" }
+  import:
+    mode: overwrite
+    match_keys: [year, ftype]
+    on_unmatched: report
+  export:
+    layout:
+      freeze_header: true
+      number_format: "#,##0"
+  submit:
+    doris:
+      table: rpt.fact_forecast_year
+      mapping:
+        year: year
+        ftype: ftype
+        "m01": m01
+        "m02": m02
+        "m03": m03
+        "m04": m04
+        "m05": m05
+        "m06": m06
+        "m07": m07
+        "m08": m08
+        "m09": m09
+        "m10": m10
+        "m11": m11
+        "m12": m12
+        total: total
+    lock_after: true
+  push:
+    - { channel: dingtalk, to: sales-group, on: submit }
