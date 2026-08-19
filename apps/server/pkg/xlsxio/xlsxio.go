@@ -35,7 +35,7 @@ type Col struct {
 // Write 按表单格式导出：表头 + 数据 + 隐藏 _meta sheet。
 func Write(w io.Writer, meta Meta, cols []template.ColumnSpec, rows []map[string]any, numberFormat string, freeze bool) error {
 	meta.GeneratedAt = time.Now().Format(time.RFC3339)
-	meta.Generator = "kingdee-rpt/1.0"
+	meta.Generator = "jyx-bi/1.0"
 	if meta.Columns == nil {
 		meta.Columns = make([]Col, 0, len(cols))
 		for _, c := range cols {
