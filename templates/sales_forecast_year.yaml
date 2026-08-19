@@ -2,6 +2,7 @@ apiVersion: rpt/v1
 kind: Report
 metadata:
   code: sales_forecast_year
+  group: 销售板块
   name: 销售年度预测填报
   version: 2
 spec:

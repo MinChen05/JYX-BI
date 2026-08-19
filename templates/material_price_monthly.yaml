@@ -2,6 +2,7 @@ apiVersion: rpt/v1
 kind: Report
 metadata:
   code: material_price_monthly
+  group: 采购板块
   name: 大宗材料价格填报
   version: 2
 spec:

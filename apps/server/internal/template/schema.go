@@ -15,6 +15,8 @@ type Metadata struct {
 	Code    string `yaml:"code"`
 	Name    string `yaml:"name"`
 	Version int    `yaml:"version"`
+	// Group 目录板块（门户左侧树分组，空 = 未分组）
+	Group string `yaml:"group" json:"group"`
 }
 
 type Spec struct {

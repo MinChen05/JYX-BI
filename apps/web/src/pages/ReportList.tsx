@@ -7,17 +7,7 @@ import React, { useRef, useState } from 'react';
 import { listReports } from '../api/rpt';
 import type { ReportInfo } from '@jyx-bi/rpt-types';
 import { STATUS_TEXT } from '@jyx-bi/rpt-types';
-
-/** 参数默认值：month 取当前月 */
-function defaultParams(info: ReportInfo): Record<string, string> {
-  const out: Record<string, string> = {};
-  const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  info.params.forEach((p) => {
-    out[p.key] = p.type === 'month' ? ym : p.type === 'date' ? `${ym}-01` : '';
-  });
-  return out;
-}
+import { defaultParams, reportUrl } from '../utils/reportParams';
 
 const ReportList: React.FC = () => {
   const [rows, setRows] = useState<ReportInfo[]>([]);
@@ -54,9 +44,7 @@ const ReportList: React.FC = () => {
       width: 120,
       render: (_, r) => (
         <a
-          onClick={() =>
-            (window.location.href = `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`)
-          }
+          onClick={() => (window.location.href = reportUrl(r.code, defaultParams(r)))}
         >
           打开填报
         </a>
@@ -82,8 +70,7 @@ const ReportList: React.FC = () => {
           return { data, success: true };
         }}
         onRow={(r) => ({
-          onClick: () =>
-            (window.location.href = `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`),
+          onClick: () => (window.location.href = reportUrl(r.code, defaultParams(r))),
           style: { cursor: 'pointer' },
         })}
       />

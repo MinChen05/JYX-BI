@@ -57,6 +57,7 @@ export interface ReportInfo {
   code: string;
   name: string;
   version: number;
+  group?: string;
   params: ParamDef[];
   instances: InstanceBrief[];
 }

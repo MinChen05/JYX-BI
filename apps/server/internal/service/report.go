@@ -63,6 +63,7 @@ type ReportInfo struct {
 	Code      string                `json:"code"`
 	Name      string                `json:"name"`
 	Version   int                   `json:"version"`
+	Group     string                `json:"group"`
 	Params    []template.ParamDef   `json:"params"`
 	Instances []InstanceBrief       `json:"instances"`
 }
@@ -87,6 +88,7 @@ func (s *Service) ListReports() ([]ReportInfo, error) {
 		// 空切片保证 JSON 输出 [] 而非 null，前端可直接 .length
 		ri := ReportInfo{
 			Code: code, Name: def.Metadata.Name, Version: def.Metadata.Version,
+			Group: def.Metadata.Group,
 			Params: params, Instances: []InstanceBrief{},
 		}
 		infos = append(infos, ri)

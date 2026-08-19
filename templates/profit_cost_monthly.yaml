@@ -2,6 +2,7 @@ apiVersion: rpt/v1
 kind: Report
 metadata:
   code: profit_cost_monthly
+  group: 管理板块
   name: 利润分析成本填报
   version: 2
 spec:
