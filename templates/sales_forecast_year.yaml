@@ -51,6 +51,8 @@ spec:
     mode: upsert
     mssql:
       table: forecast_order_baseline
+      # 全表行集报表：提交后删除不在提交集里的行（用户删掉的预测行同步消失）
+      delete: all
       keys: [pln_type, forecast_year]
       mapping:
         ftype: pln_type

@@ -98,11 +98,21 @@ type DorisDef struct {
 // MssqlWrite MSSQL 写回配置。
 // upsert: keys 为匹配列（目标表列名），值取自 mapping 的源列。
 // unpivot: 每个日列的非空值展开为一行长表记录。
+//
+// 删除语义（可选，二者/三者都不配 = 只增改不删）：
+//   - delete: all    提交后删除全表中键值组合不在提交集内的行（全表行集报表）
+//   - delete: month  仅 unpivot：删除 pivot 日期列所在月份区间内不在提交集内的行
+//   - delete_where   期间范围条件（列 → param.x 或字面量，多列 AND），
+//     在其范围内删除键值组合不在提交集内的行
+//
+// 保护：提交集为空时跳过删除（防止清空期间数据）。
 type MssqlWrite struct {
-	Table  string            `yaml:"table"`
-	Keys   []string          `yaml:"keys"`
-	Mapping map[string]string `yaml:"mapping"` // 网格列/param.x/now() → 目标列（unpivot 时用于行级静态字段）
-	Pivot  *PivotDef         `yaml:"pivot"`    // mode=unpivot 必填
+	Table       string            `yaml:"table"`
+	Keys        []string          `yaml:"keys"`
+	Mapping     map[string]string `yaml:"mapping"` // 网格列/param.x/now() → 目标列（unpivot 时用于行级静态字段）
+	Pivot       *PivotDef         `yaml:"pivot"`   // mode=unpivot 必填
+	Delete      string            `yaml:"delete"`  // all | month
+	DeleteWhere map[string]string `yaml:"delete_where"`
 }
 
 type PivotDef struct {

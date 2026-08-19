@@ -91,8 +91,37 @@ func (e *Engine) Compile(code string, params map[string]string) (*Compiled, erro
 		}
 		c.Doris = targets
 	}
+	if def.Spec.Submit.Mssql.Table != "" {
+		if err := validateMssqlDelete(def.Spec.Submit.Mssql, def.Spec.Submit.Mode); err != nil {
+			return nil, fmt.Errorf("report %s mssql delete: %w", code, err)
+		}
+	}
 	e.cache.Store(key, c)
 	return c, nil
+}
+
+var tplIdentRe = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+
+// validateMssqlDelete 校验写回删除语义配置的静态部分（值合法、列名合法、month 依赖 unpivot）。
+func validateMssqlDelete(mw MssqlWrite, mode string) error {
+	switch mw.Delete {
+	case "", "all":
+	case "month":
+		if mode != "unpivot" || mw.Pivot == nil {
+			return fmt.Errorf("delete:month 仅支持 unpivot 模式")
+		}
+		if !tplIdentRe.MatchString(mw.Pivot.DateCol) {
+			return fmt.Errorf("非法日期列名 %q", mw.Pivot.DateCol)
+		}
+	default:
+		return fmt.Errorf("非法值 %q（可选 all|month）", mw.Delete)
+	}
+	for col := range mw.DeleteWhere {
+		if !tplIdentRe.MatchString(col) {
+			return fmt.Errorf("非法列名 %q", col)
+		}
+	}
+	return nil
 }
 
 var numSuffixRe = regexp.MustCompile(`^(.*?)(\d+)$`)

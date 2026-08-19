@@ -72,6 +72,8 @@ spec:
     mode: unpivot
     mssql:
       table: MaterialPriceHistory
+      # 提交后删除该月份内不在提交集里的价格行（含被清掉的单日价格）
+      delete: month
       keys: [MaterialName, PriceDate]
       mapping:
         material: MaterialName

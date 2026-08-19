@@ -42,6 +42,8 @@ spec:
     mode: upsert
     mssql:
       table: customer_cost_report
+      # 提交后删除该期间内不在提交集里的客户行（行集变化时同步生产库）
+      delete_where: { biz_date: "param.biz_date" }
       keys: [customer_code, biz_date]
       mapping:
         customer_code: customer_code

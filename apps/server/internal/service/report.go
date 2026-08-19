@@ -3,6 +3,8 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -449,6 +451,7 @@ func (s *Service) writeMssqlUpsert(mw template.MssqlWrite, compiled *template.Co
 			return fmt.Errorf("mssql keys 列 %s 不在 mapping 目标中", k)
 		}
 	}
+	var keyTuples [][]any
 	for _, r := range rows {
 		rowMap := map[string]any{}
 		for src, dst := range mw.Mapping {
@@ -457,7 +460,121 @@ func (s *Service) writeMssqlUpsert(mw template.MssqlWrite, compiled *template.Co
 		if err := store.UpsertRowMssql(s.Mssql, mw.Table, mw.Keys, cols, rowMap); err != nil {
 			return err
 		}
+		keyTuples = append(keyTuples, keyTupleOf(mw.Keys, rowMap))
 	}
+	return s.deleteStaleRows(mw, params, keyTuples)
+}
+
+var mssqlIdentRe = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+
+// keyTupleOf 按 keys 顺序从 rowMap 取键值组合。
+func keyTupleOf(keys []string, rowMap map[string]any) []any {
+	t := make([]any, len(keys))
+	for i, k := range keys {
+		t[i] = rowMap[k]
+	}
+	return t
+}
+
+// buildDeleteScope 按模板配置构建删除范围条件（SQL 片段 + 参数，占位符 @p1..@pN 按序）。
+// 未配置任何删除语义时返回 ("", nil, false, nil)。
+func buildDeleteScope(mw template.MssqlWrite, params map[string]string) (string, []any, bool, error) {
+	if mw.Delete == "" && len(mw.DeleteWhere) == 0 {
+		return "", nil, false, nil
+	}
+	switch mw.Delete {
+	case "", "all", "month":
+	default:
+		return "", nil, false, fmt.Errorf("非法 delete 值 %q（可选 all|month）", mw.Delete)
+	}
+	var conds []string
+	var args []any
+	pi := 0
+	nextP := func() string {
+		pi++
+		return fmt.Sprintf("@p%d", pi)
+	}
+	if mw.Delete == "month" {
+		if mw.Pivot == nil {
+			return "", nil, false, fmt.Errorf("delete:month 需要 pivot 配置（unpivot 模式）")
+		}
+		monthParam := "biz_date"
+		if mw.Pivot.MonthParam != "" {
+			monthParam = mw.Pivot.MonthParam
+		}
+		t, err := time.Parse("2006-01", params[monthParam])
+		if err != nil {
+			return "", nil, false, fmt.Errorf("delete:month 解析月份参数 %s 失败: %w", monthParam, err)
+		}
+		if !mssqlIdentRe.MatchString(mw.Pivot.DateCol) {
+			return "", nil, false, fmt.Errorf("非法日期列名 %q", mw.Pivot.DateCol)
+		}
+		conds = append(conds, fmt.Sprintf("[%s] >= %s AND [%s] < %s",
+			mw.Pivot.DateCol, nextP(), mw.Pivot.DateCol, nextP()))
+		args = append(args, t.Format("2006-01-02"), t.AddDate(0, 1, 0).Format("2006-01-02"))
+	}
+	// map 遍历序随机，但条件之间是 AND，参数在循环内同步追加，不影响正确性
+	for col, expr := range mw.DeleteWhere {
+		if !mssqlIdentRe.MatchString(col) {
+			return "", nil, false, fmt.Errorf("非法 delete_where 列名 %q", col)
+		}
+		val := expr
+		if strings.HasPrefix(expr, "param.") {
+			v, ok := params[strings.TrimPrefix(expr, "param.")]
+			if !ok {
+				return "", nil, false, fmt.Errorf("delete_where 引用了不存在的参数 %s", expr)
+			}
+			val = v
+		}
+		conds = append(conds, fmt.Sprintf("[%s] = %s", col, nextP()))
+		args = append(args, val)
+	}
+	return strings.Join(conds, " AND "), args, true, nil
+}
+
+// deleteStaleRows 删除"期间"内键值组合不在提交集内的存量行（配置了删除语义时）。
+// 保护：提交集为空时跳过（防止把期间数据清空）。
+func (s *Service) deleteStaleRows(mw template.MssqlWrite, params map[string]string, submitted [][]any) error {
+	scopeSQL, scopeArgs, enabled, err := buildDeleteScope(mw, params)
+	if err != nil {
+		return err
+	}
+	if !enabled {
+		return nil
+	}
+	if len(submitted) == 0 {
+		log.Printf("[submit-delete] %s: 提交集为空，跳过删除（安全保护）", mw.Table)
+		return nil
+	}
+	existing, err := store.SelectKeyRows(s.Mssql, mw.Table, mw.Keys, scopeSQL, scopeArgs)
+	if err != nil {
+		return fmt.Errorf("查询存量键值失败: %w", err)
+	}
+	var stale [][]any
+	for _, ex := range existing {
+		found := false
+		for _, sub := range submitted {
+			if store.KeyTupleEq(ex, sub) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			stale = append(stale, ex)
+		}
+	}
+	if len(stale) == 0 {
+		return nil
+	}
+	n, err := store.DeleteByKeys(s.Mssql, mw.Table, mw.Keys, scopeSQL, scopeArgs, stale)
+	if err != nil {
+		return fmt.Errorf("删除失效行失败: %w", err)
+	}
+	scopeDesc := scopeSQL
+	if scopeDesc == "" {
+		scopeDesc = "全表"
+	}
+	log.Printf("[submit-delete] %s: 删除 %d 行失效数据（范围: %s）", mw.Table, n, scopeDesc)
 	return nil
 }
 
@@ -489,6 +606,7 @@ func (s *Service) writeMssqlUnpivot(mw template.MssqlWrite, compiled *template.C
 	for _, k := range mw.Keys {
 		addCol(k)
 	}
+	var keyTuples [][]any
 	for _, r := range rows {
 		for _, c := range compiled.Cols {
 			if !strings.Contains(c.Key, pv.DayColTpl[:strings.Index(pv.DayColTpl, "{")]) {
@@ -512,9 +630,10 @@ func (s *Service) writeMssqlUnpivot(mw template.MssqlWrite, compiled *template.C
 			if err := store.UpsertRowMssql(s.Mssql, pvTable, mw.Keys, cols, rowMap); err != nil {
 				return err
 			}
+			keyTuples = append(keyTuples, keyTupleOf(mw.Keys, rowMap))
 		}
 	}
-	return nil
+	return s.deleteStaleRows(mw, params, keyTuples)
 }
 
 // dayFromKey 从动态列 key（如 d05）解析 day 号，依据 DayColTpl（d{day}）定位数字后缀。

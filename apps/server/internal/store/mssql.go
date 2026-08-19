@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -103,4 +104,138 @@ func UpsertRowMssql(db *gorm.DB, table string, keys []string, cols []string, row
 
 	_, err = sd.Exec(sb.String(), args...)
 	return err
+}
+
+// SelectKeyRows 查询 scope 范围内已存在的键值组合（计算删除差集用）。
+// scopeSQL 形如 "t1 = @p1 AND t2 = @p2"（可为空串 = 全表），scopeArgs 与占位符按序对应。
+func SelectKeyRows(db *gorm.DB, table string, keys []string, scopeSQL string, scopeArgs []any) ([][]any, error) {
+	if err := checkIdent(table); err != nil {
+		return nil, err
+	}
+	for _, k := range keys {
+		if err := checkIdent(k); err != nil {
+			return nil, err
+		}
+	}
+	sd, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	cols := make([]string, 0, len(keys))
+	for _, k := range keys {
+		cols = append(cols, "["+k+"]")
+	}
+	q := "SELECT " + strings.Join(cols, ", ") + " FROM [" + table + "]"
+	if scopeSQL != "" {
+		q += " WHERE " + scopeSQL
+	}
+	rows, err := sd.Query(q, scopeArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out [][]any
+	for rows.Next() {
+		vals := make([]any, len(keys))
+		ptrs := make([]any, len(keys))
+		for i := range vals {
+			ptrs[i] = &vals[i]
+		}
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, err
+		}
+		out = append(out, vals)
+	}
+	return out, nil
+}
+
+// DeleteByKeys 删除 scope 范围内键值组合命中 tuples 的行，返回删除行数。
+// tuples 每行 = 一个键值组合（与 keys 顺序一致）。按 500 行/语句分批，避免参数超限。
+func DeleteByKeys(db *gorm.DB, table string, keys []string, scopeSQL string, scopeArgs []any, tuples [][]any) (int64, error) {
+	if err := checkIdent(table); err != nil {
+		return 0, err
+	}
+	for _, k := range keys {
+		if err := checkIdent(k); err != nil {
+			return 0, err
+		}
+	}
+	if len(tuples) == 0 {
+		return 0, nil
+	}
+	sd, err := db.DB()
+	if err != nil {
+		return 0, err
+	}
+	var total int64
+	for start := 0; start < len(tuples); start += 500 {
+		end := start + 500
+		if end > len(tuples) {
+			end = len(tuples)
+		}
+		var sb strings.Builder
+		var args []any
+		pi := 0
+		nextP := func() string {
+			pi++
+			return fmt.Sprintf("@p%d", pi)
+		}
+		if scopeSQL != "" {
+			// scope 参数在前
+			sb.WriteString(" WHERE ")
+			sb.WriteString(scopeSQL)
+			args = append(args, scopeArgs...)
+			pi = len(scopeArgs)
+			sb.WriteString(" AND ")
+		} else {
+			sb.WriteString(" WHERE ")
+		}
+		conds := make([]string, 0, end-start)
+		for _, t := range tuples[start:end] {
+			kc := make([]string, 0, len(keys))
+			for i, k := range keys {
+				kc = append(kc, fmt.Sprintf("[%s] = %s", k, nextP()))
+				args = append(args, t[i])
+			}
+			conds = append(conds, "("+strings.Join(kc, " AND ")+")")
+		}
+		sb.WriteString(strings.Join(conds, " OR "))
+		res, err := sd.Exec("DELETE FROM ["+table+"]"+sb.String(), args...)
+		if err != nil {
+			return total, err
+		}
+		if n, err := res.RowsAffected(); err == nil {
+			total += n
+		}
+	}
+	return total, nil
+}
+
+// KeyTupleEq 比较两个键值组合是否相等（nil/空串 视为相同，
+// decimal 的 []byte 与字符串按内容比较）。
+func KeyTupleEq(a, b []any) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if fmt.Sprintf("%v", normKeyVal(a[i])) != fmt.Sprintf("%v", normKeyVal(b[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+func normKeyVal(v any) any {
+	switch x := v.(type) {
+	case nil:
+		return ""
+	case []byte:
+		return strings.TrimSpace(string(x))
+	case string:
+		return strings.TrimSpace(x)
+	case time.Time:
+		return x.Format("2006-01-02")
+	default:
+		return v
+	}
 }
