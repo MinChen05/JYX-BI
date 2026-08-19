@@ -27,6 +27,9 @@
 - config.ts 必须保留 `initialState: {}`：initial-state 插件是 `enableBy: config`，漏掉这个 key 时 app.tsx 的 `getInitialState` 运行时注册失败（"invalid key getInitialState"），整页白屏
 - 改了前端依赖/配置后先 `npx max setup` 重新生成 src/.umi 再跑 tsc
 - dev 端口若被占（8001 在 linux10 被容器占用），用 `PORT=8002 npx max dev` 覆盖；新端口要加进 firewalld（`firewall-cmd --permanent --add-port`）Mac 才访问得到
+- umi config 改动（config.ts/defaultSettings.ts/routes.ts）**不热更新**，必须重启 dev server；只有 src 代码热更新
+- layout 插件（umi 4.7.6）有两个坑：① 模板硬编码 `navTheme="dark"`，config 里的 navTheme 不生效，layout 模式也不透传——`layout`/`navTheme` 必须写在 app.tsx 的 runtime layout 返回里（runtime 展开在模板属性之后，可覆盖）；② `navTheme: 'realDark'` 会给整个 ProConfigProvider 开暗色算法（内容区全变黑），只要深色顶栏就用 `token.header.{colorBgHeader,colorHeaderTitle,colorTextMenu...}` 单独染顶栏
+- 后端结构体返回给前端必须有 json 标签（小写 snake/camel 与 rpt-types 一致），只有 yaml 标签会输出大写 Go 字段名，前端静默取不到值
 
 ## 提交习惯
 

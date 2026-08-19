@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { listReports } from '../api/rpt';
 import type { ReportInfo } from '@jyx-bi/rpt-types';
+import PageShell from '../components/PageShell';
 import { defaultParams } from '../utils/reportParams';
 
 type TreeNode = {
@@ -16,7 +17,7 @@ type TreeNode = {
 
 /**
  * 报表门户：左侧目录树（板块分组）+ 右侧内嵌填报页，操作对齐帆软报表目录。
- * 全幅白底无卡片：左树通到顶，一根分隔线，右侧内容区撑满。
+ * 外嵌 PageShell（窄图标栏），与深色顶栏组成帆软三栏结构。
  */
 const Portal: React.FC = () => {
   const [reports, setReports] = useState<ReportInfo[]>([]);
@@ -59,77 +60,79 @@ const Portal: React.FC = () => {
     : '';
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 56px)', background: '#fff' }}>
-      {/* 左侧目录树 */}
-      <div
-        style={{
-          width: 250,
-          flexShrink: 0,
-          borderRight: '1px solid #f0f0f0',
-          padding: '12px 8px',
-          overflow: 'auto',
-        }}
-      >
-        {treeData.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无报表" />
-        ) : (
-          <Tree
-            blockNode
-            defaultExpandAll
-            showIcon
-            treeData={treeData}
-            onSelect={onSelect}
-            selectedKeys={selected ? [`r:${selected.code}`] : []}
-          />
-        )}
-      </div>
-      {/* 右侧内容区 */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        {selected ? (
-          <>
+    <PageShell>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        {/* 左侧目录树 */}
+        <div
+          style={{
+            width: 250,
+            flexShrink: 0,
+            borderRight: '1px solid #f0f0f0',
+            padding: '12px 8px',
+            overflow: 'auto',
+          }}
+        >
+          {treeData.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无报表" />
+          ) : (
+            <Tree
+              blockNode
+              defaultExpandAll
+              showIcon
+              treeData={treeData}
+              onSelect={onSelect}
+              selectedKeys={selected ? [`r:${selected.code}`] : []}
+            />
+          )}
+        </div>
+        {/* 右侧内容区 */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {selected ? (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 16px',
+                  borderBottom: '1px solid #f0f0f0',
+                  flexShrink: 0,
+                }}
+              >
+                <Typography.Text strong>{selected.name}</Typography.Text>
+                <Space>
+                  <a
+                    href={`/reports/${selected.code}?${new URLSearchParams(defaultParams(selected)).toString()}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <LinkOutlined /> 新标签页打开
+                  </a>
+                </Space>
+              </div>
+              <iframe
+                key={selected.code}
+                src={embedUrl}
+                title={selected.name}
+                style={{ flex: 1, width: '100%', border: 'none' }}
+              />
+            </>
+          ) : (
             <div
               style={{
+                flex: 1,
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '8px 16px',
-                borderBottom: '1px solid #f0f0f0',
-                flexShrink: 0,
+                justifyContent: 'center',
+                background: '#fafafa',
               }}
             >
-              <Typography.Text strong>{selected.name}</Typography.Text>
-              <Space>
-                <a
-                  href={`/reports/${selected.code}?${new URLSearchParams(defaultParams(selected)).toString()}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <LinkOutlined /> 新标签页打开
-                </a>
-              </Space>
+              <Empty description="请从左侧目录选择报表" />
             </div>
-            <iframe
-              key={selected.code}
-              src={embedUrl}
-              title={selected.name}
-              style={{ flex: 1, width: '100%', border: 'none' }}
-            />
-          </>
-        ) : (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#fafafa',
-            }}
-          >
-            <Empty description="请从左侧目录选择报表" />
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

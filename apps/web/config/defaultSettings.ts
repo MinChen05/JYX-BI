@@ -1,6 +1,6 @@
 const Settings = {
-  navTheme: 'light',
-  layout: 'side',
+  navTheme: 'dark',
+  layout: 'top',
   contentWidth: 'Fluid',
   fixedHeader: true,
   colorPrimary: '#1677ff',

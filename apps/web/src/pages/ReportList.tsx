@@ -1,4 +1,3 @@
-import { PageContainer } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Tag } from 'antd';
@@ -8,6 +7,7 @@ import { listReports } from '../api/rpt';
 import type { ReportInfo } from '@jyx-bi/rpt-types';
 import { STATUS_TEXT } from '@jyx-bi/rpt-types';
 import { defaultParams, reportUrl } from '../utils/reportParams';
+import PageShell from '../components/PageShell';
 
 const ReportList: React.FC = () => {
   const [rows, setRows] = useState<ReportInfo[]>([]);
@@ -55,8 +55,9 @@ const ReportList: React.FC = () => {
   const actionRef = useRef<any>();
 
   return (
-    <PageContainer title="报表清单">
-      <ProTable<ReportInfo>
+    <PageShell>
+      <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+        <ProTable<ReportInfo>
         rowKey="code"
         headerTitle="可填报报表"
         columns={columns}
@@ -73,8 +74,9 @@ const ReportList: React.FC = () => {
           onClick: () => (window.location.href = reportUrl(r.code, defaultParams(r))),
           style: { cursor: 'pointer' },
         })}
-      />
-    </PageContainer>
+        />
+      </div>
+    </PageShell>
   );
 };
 
