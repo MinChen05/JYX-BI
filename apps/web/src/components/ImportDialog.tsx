@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Descriptions,
+  message,
   Modal,
   Space,
   Table,
@@ -12,6 +13,7 @@ import React, { useState } from 'react';
 
 import { importFile } from '../api/rpt';
 import type { ImportReport } from '@jyx-bi/rpt-types';
+import { errMsg } from '../utils/reportParams';
 
 interface Props {
   open: boolean;
@@ -31,6 +33,8 @@ const ImportDialog: React.FC<Props> = ({ open, code, params, onClose, onImported
     try {
       const r = await importFile(code, params, file);
       setReport(r);
+    } catch (e: any) {
+      message.error(errMsg(e, '导入校验失败'));
     } finally {
       setLoading(false);
     }
@@ -40,9 +44,13 @@ const ImportDialog: React.FC<Props> = ({ open, code, params, onClose, onImported
   const confirm = async () => {
     if (!report) return;
     const { confirmImport } = await import('../api/rpt');
-    await confirmImport(code, params, report.job_id);
-    onImported();
-    onClose();
+    try {
+      await confirmImport(code, params, report.job_id);
+      onImported();
+      onClose();
+    } catch (e: any) {
+      message.error(errMsg(e, '导入失败'));
+    }
   };
 
   return (

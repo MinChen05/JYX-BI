@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -18,9 +19,11 @@ func (d *deps) respondOK(c *gin.Context, data any) {
 
 func (d *deps) respondErr(c *gin.Context, err error) {
 	if ae, ok2 := err.(*service.AppError); ok2 {
+		log.Printf("[api-error] %s %s code=%s message=%s", c.Request.Method, c.Request.URL.Path, ae.Code, ae.Message)
 		c.JSON(http.StatusBadRequest, gin.H{"ok": false, "error": ae})
 		return
 	}
+	log.Printf("[api-error] %s %s INTERNAL: %v", c.Request.Method, c.Request.URL.Path, err)
 	c.JSON(http.StatusInternalServerError, gin.H{"ok": false, "error": gin.H{"code": "INTERNAL", "message": err.Error()}})
 }
 

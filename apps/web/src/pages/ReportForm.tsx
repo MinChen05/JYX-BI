@@ -34,6 +34,7 @@ import type {
   RowPayload,
 } from '@jyx-bi/rpt-types';
 import { STATUS_TEXT } from '@jyx-bi/rpt-types';
+import { errMsg } from '../utils/reportParams';
 
 /**
  * 通用填报页：完全由 GridSpec 驱动，不感知具体报表。
@@ -93,7 +94,7 @@ const ReportForm: React.FC = () => {
         g.rows.map((r) => g.columns.map((c) => r.cells[c.key] ?? null)),
       );
     } catch (e: any) {
-      msgApi.error(e?.error?.message ?? '加载失败');
+      msgApi.error(errMsg(e, '加载失败'));
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,7 @@ const ReportForm: React.FC = () => {
       msgApi.success('草稿已保存');
       load();
     } catch (e: any) {
-      msgApi.error(e?.error?.message ?? '保存失败');
+      msgApi.error(errMsg(e, '保存失败'));
     }
   };
 
@@ -130,7 +131,7 @@ const ReportForm: React.FC = () => {
       const r = await validateGrid(code, params, collect());
       setIssues(r.issues);
     } catch (e: any) {
-      msgApi.error(e?.error?.message ?? '校验失败');
+      msgApi.error(errMsg(e, '校验失败'));
     }
   };
 
@@ -144,7 +145,7 @@ const ReportForm: React.FC = () => {
           msgApi.success('提交成功');
           load();
         } catch (e: any) {
-          msgApi.error(e?.error?.message ?? '提交失败');
+          msgApi.error(errMsg(e, '提交失败'));
         }
       },
     });
@@ -156,7 +157,7 @@ const ReportForm: React.FC = () => {
       msgApi.success('已撤回，可继续编辑');
       load();
     } catch (e: any) {
-      msgApi.error(e?.error?.message ?? '撤回失败');
+      msgApi.error(errMsg(e, '撤回失败'));
     }
   };
 

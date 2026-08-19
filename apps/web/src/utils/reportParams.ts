@@ -15,3 +15,8 @@ export function defaultParams(info: ReportInfo): Record<string, string> {
 export function reportUrl(code: string, params: Record<string, string>) {
   return `/reports/${code}?${new URLSearchParams(params).toString()}`;
 }
+
+/** 从 axios 错误里取服务端返回的具体错误信息（{ok:false,error:{code,message}}） */
+export function errMsg(e: any, fallback: string): string {
+  return e?.response?.data?.error?.message ?? e?.error?.message ?? fallback;
+}

@@ -321,7 +321,12 @@ func (s *Service) Submit(code string, params map[string]string, req *engine.Draf
 		InstanceID: inst.ID, Action: "submit", Snapshot: string(snapshot), Op: "admin", CreatedAt: now,
 	})
 	if err := s.writeBack(compiled, params, merged); err != nil {
-		return nil, errf("DORIS_WRITE", "Doris 写入失败: "+err.Error())
+		// 写回失败必须把实例回滚为草稿，避免"系统库已提交、生产库没数据"的不一致
+		inst.Status = model.StatusDraft
+		inst.SubmittedAt = nil
+		inst.UpdatedAt = time.Now()
+		_ = store.SaveInstance(s.MySQL, inst)
+		return nil, errf("WRITEBACK_FAILED", "生产库写回失败，未提交: "+err.Error())
 	}
 	// 推送（异步，失败不阻塞）
 	if s.Pusher != nil && len(compiled.Def.Spec.Push) > 0 {
