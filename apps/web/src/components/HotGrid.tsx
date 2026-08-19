@@ -1,6 +1,5 @@
 import Handsontable from 'handsontable';
-import 'handsontable/styles/handsontable.min.css';
-import 'handsontable/styles/theme/main.min.css';
+import 'handsontable/dist/handsontable.min.css';
 import React, {
   forwardRef,
   useEffect,

@@ -25,4 +25,5 @@ export default defineConfig({
     title: '金蝶报表平台',
   },
   npmClient: 'npm',
+  esbuildMinifyIIFE: true,
 });
