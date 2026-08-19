@@ -32,7 +32,7 @@ const ReportList: React.FC = () => {
       search: false,
       width: 220,
       render: (_, r) =>
-        r.instances.length === 0 ? (
+        !r.instances || r.instances.length === 0 ? (
           <Tag>未填报</Tag>
         ) : (
           r.instances.map((i) => (

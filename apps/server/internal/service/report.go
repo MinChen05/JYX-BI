@@ -80,7 +80,15 @@ func (s *Service) ListReports() ([]ReportInfo, error) {
 	infos := make([]ReportInfo, 0)
 	for _, code := range s.Engine.Codes() {
 		def, _ := s.Engine.Get(code)
-		ri := ReportInfo{Code: code, Name: def.Metadata.Name, Version: def.Metadata.Version, Params: def.Spec.Params}
+		params := def.Spec.Params
+		if params == nil {
+			params = []template.ParamDef{}
+		}
+		// 空切片保证 JSON 输出 [] 而非 null，前端可直接 .length
+		ri := ReportInfo{
+			Code: code, Name: def.Metadata.Name, Version: def.Metadata.Version,
+			Params: params, Instances: []InstanceBrief{},
+		}
 		infos = append(infos, ri)
 	}
 	insts, err := store.ListInstances(s.MySQL)
