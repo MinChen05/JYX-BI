@@ -13,6 +13,7 @@ import React from 'react';
 
 interface Props {
   locked: boolean;
+  editable: boolean;
   rowOps: { add: boolean; delete: boolean };
   onDraft: () => void;
   onValidate: () => void;
@@ -25,8 +26,20 @@ interface Props {
   onPrint: () => void;
 }
 
-/** 工具条：对齐截图里的 [提交 数据校验 添加记录 删除行 导出 覆盖导入 打印] */
+/** 工具条：填报报表 [提交 存草稿 校验 增删行 导出 覆盖导入 打印]；展示报表只留 导出/打印 */
 const Toolbar: React.FC<Props> = (p) => {
+  if (!p.editable) {
+    return (
+      <Space wrap>
+        <Button icon={<FileExcelOutlined />} onClick={p.onExport}>
+          导出
+        </Button>
+        <Button icon={<PrinterOutlined />} onClick={p.onPrint}>
+          打印
+        </Button>
+      </Space>
+    );
+  }
   return (
     <Space wrap>
       <Button type="primary" icon={<SendOutlined />} onClick={p.onSubmit}>

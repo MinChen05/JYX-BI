@@ -3,42 +3,53 @@ kind: Report
 metadata:
   code: profit_cost_monthly
   name: 利润分析成本填报
-  version: 1
+  version: 2
 spec:
   params:
     - { key: biz_date, label: 日期, type: month, required: true }
   rows:
-    source: sql
-    query: "SELECT cust_no, name, salesman, category FROM dim_customer WHERE active = 1 ORDER BY cust_no"
+    source: mssql
+    # 行集 = 目标月已有行（预填成本）；目标月无数据时回落到最近一个有数的月份
+    # （继承客户/业务员/分类，成本置空）
+    query: >
+      SELECT customer_code, customer, salesperson, customer_type,
+        CASE WHEN biz_date = '{biz_date}' THEN cost_amount ELSE NULL END AS cost,
+        '{biz_date}' AS biz_date
+      FROM customer_cost_report
+      WHERE biz_date = (SELECT MAX(biz_date) FROM customer_cost_report WHERE biz_date <= '{biz_date}')
     editable_rows: false
   columns:
     - { key: seq, label: 序号, type: auto, readonly: true }
-    - { key: cust_no, label: 客户编号, type: text, readonly: true, width: 180 }
-    - { key: name, label: 客户, type: text, readonly: true, width: 260 }
-    - { key: salesman, label: 客户业务员, type: text, readonly: true }
-    - { key: category, label: 客户分类, type: text, readonly: true }
+    - { key: customer_code, label: 客户编号, type: text, readonly: true, width: 180 }
+    - { key: customer, label: 客户, type: text, readonly: true, width: 260 }
+    - { key: salesperson, label: 客户业务员, type: text, readonly: true }
+    - { key: customer_type, label: 客户分类, type: text, readonly: true }
     - { key: cost, label: 成本金额, type: money }
     - { key: biz_date, label: 业务日期, type: month }
   validation:
     - { cols: ["cost"], rule: "v >= 0" }
   import:
     mode: overwrite
-    match_keys: [cust_no]
+    match_keys: [customer_code]
     on_unmatched: report
   export:
     layout:
       freeze_header: true
       number_format: "#,##0.00"
   submit:
-    doris:
-      table: rpt.fact_profit_cost
+    target: mssql
+    mode: upsert
+    mssql:
+      table: customer_cost_report
+      keys: [customer_code, biz_date]
       mapping:
-        cust_no: cust_no
-        name: cust_name
-        salesman: salesman
-        category: category
-        cost: cost
+        customer_code: customer_code
+        customer: customer
+        salesperson: salesperson
+        customer_type: customer_type
+        cost: cost_amount
         biz_date: biz_date
+        "now()": submit_time
     lock_after: true
   push:
     - { channel: email, to: cost.owner, on: submit }

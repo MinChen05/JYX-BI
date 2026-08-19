@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/expr-lang/expr"
@@ -127,9 +128,22 @@ func (v *compiledValidator) Run(rows []map[string]any) []Issue {
 }
 
 // AsString 统一转字符串（nil/空 → ""）。
+// 数值必须用 strconv 格式化：fmt %v 对 float 等价 %g，大数会变科学计数法。
 func AsString(v any) string {
-	if v == nil {
+	switch x := v.(type) {
+	case nil:
 		return ""
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	case float32:
+		return strconv.FormatFloat(float64(x), 'f', -1, 32)
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case bool:
+		return strconv.FormatBool(x)
+	default:
+		return strings.TrimSpace(fmt.Sprintf("%v", v))
 	}
-	return strings.TrimSpace(fmt.Sprintf("%v", v))
 }

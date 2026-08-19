@@ -11,7 +11,6 @@ import {
   Typography,
 } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams } from '@umijs/max';
 import dayjs from 'dayjs';
 
 import {
@@ -40,8 +39,8 @@ import { STATUS_TEXT } from '@kingdee-rpt/rpt-types';
  * 通用填报页：完全由 GridSpec 驱动，不感知具体报表。
  */
 const ReportForm: React.FC = () => {
-  const { code = '' } = useParams();
-  const [search] = useSearchParams();
+  // 路由参数直接解析 URL（页面跳转用 window.location，无需 router hooks）
+  const code = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
   const [spec, setSpec] = useState<GridSpec | null>(null);
   const [reportMeta, setReportMeta] = useState<ReportInfo | null>(null);
   const [paramValues, setParamValues] = useState<Record<string, string>>({});
@@ -80,7 +79,7 @@ const ReportForm: React.FC = () => {
     if (!code || Object.keys(params).length === 0) return;
     setLoading(true);
     try {
-      const g = await getGrid(code, params);
+      const g: GridSpec = (await getGrid(code, params)) as GridSpec;
       setSpec(g);
       setReportMeta({
         code: g.report,
@@ -103,12 +102,10 @@ const ReportForm: React.FC = () => {
   useEffect(() => {
     // 从 URL query 初始化参数
     if (!code) return;
-    const init: Record<string, string> = {};
-    search.forEach((v, k) => (init[k] = v));
-    setParamValues(init);
+    setParamValues(Object.fromEntries(new URLSearchParams(window.location.search)));
     // 取模板参数定义（label/type），供参数栏渲染
-    listReports().then((all) => {
-      const meta = all.find((r) => r.code === code);
+    listReports().then((all: ReportInfo[]) => {
+      const meta = all.find((r: ReportInfo) => r.code === code);
       if (meta) setParamDefs(meta.params);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,6 +217,7 @@ const ReportForm: React.FC = () => {
         >
           <Toolbar
             locked={!!locked}
+            editable={spec?.editable ?? false}
             rowOps={spec?.row_ops ?? { add: false, delete: false }}
             onDraft={onDraft}
             onValidate={onValidate}

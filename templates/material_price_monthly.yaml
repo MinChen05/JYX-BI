@@ -3,13 +3,52 @@ kind: Report
 metadata:
   code: material_price_monthly
   name: 大宗材料价格填报
-  version: 1
+  version: 2
 spec:
   params:
     - { key: biz_date, label: 业务日期, type: month, required: true }
   rows:
-    source: sql
-    query: "SELECT name AS material, category FROM dim_material WHERE active = 1 ORDER BY category, name"
+    source: mssql
+    query: >
+      SELECT m.MaterialName AS material, m.Category AS category,
+      MAX(CASE WHEN DAY(h.PriceDate) = 1 THEN h.Price END) AS d01,
+      MAX(CASE WHEN DAY(h.PriceDate) = 2 THEN h.Price END) AS d02,
+      MAX(CASE WHEN DAY(h.PriceDate) = 3 THEN h.Price END) AS d03,
+      MAX(CASE WHEN DAY(h.PriceDate) = 4 THEN h.Price END) AS d04,
+      MAX(CASE WHEN DAY(h.PriceDate) = 5 THEN h.Price END) AS d05,
+      MAX(CASE WHEN DAY(h.PriceDate) = 6 THEN h.Price END) AS d06,
+      MAX(CASE WHEN DAY(h.PriceDate) = 7 THEN h.Price END) AS d07,
+      MAX(CASE WHEN DAY(h.PriceDate) = 8 THEN h.Price END) AS d08,
+      MAX(CASE WHEN DAY(h.PriceDate) = 9 THEN h.Price END) AS d09,
+      MAX(CASE WHEN DAY(h.PriceDate) = 10 THEN h.Price END) AS d10,
+      MAX(CASE WHEN DAY(h.PriceDate) = 11 THEN h.Price END) AS d11,
+      MAX(CASE WHEN DAY(h.PriceDate) = 12 THEN h.Price END) AS d12,
+      MAX(CASE WHEN DAY(h.PriceDate) = 13 THEN h.Price END) AS d13,
+      MAX(CASE WHEN DAY(h.PriceDate) = 14 THEN h.Price END) AS d14,
+      MAX(CASE WHEN DAY(h.PriceDate) = 15 THEN h.Price END) AS d15,
+      MAX(CASE WHEN DAY(h.PriceDate) = 16 THEN h.Price END) AS d16,
+      MAX(CASE WHEN DAY(h.PriceDate) = 17 THEN h.Price END) AS d17,
+      MAX(CASE WHEN DAY(h.PriceDate) = 18 THEN h.Price END) AS d18,
+      MAX(CASE WHEN DAY(h.PriceDate) = 19 THEN h.Price END) AS d19,
+      MAX(CASE WHEN DAY(h.PriceDate) = 20 THEN h.Price END) AS d20,
+      MAX(CASE WHEN DAY(h.PriceDate) = 21 THEN h.Price END) AS d21,
+      MAX(CASE WHEN DAY(h.PriceDate) = 22 THEN h.Price END) AS d22,
+      MAX(CASE WHEN DAY(h.PriceDate) = 23 THEN h.Price END) AS d23,
+      MAX(CASE WHEN DAY(h.PriceDate) = 24 THEN h.Price END) AS d24,
+      MAX(CASE WHEN DAY(h.PriceDate) = 25 THEN h.Price END) AS d25,
+      MAX(CASE WHEN DAY(h.PriceDate) = 26 THEN h.Price END) AS d26,
+      MAX(CASE WHEN DAY(h.PriceDate) = 27 THEN h.Price END) AS d27,
+      MAX(CASE WHEN DAY(h.PriceDate) = 28 THEN h.Price END) AS d28,
+      MAX(CASE WHEN DAY(h.PriceDate) = 29 THEN h.Price END) AS d29,
+      MAX(CASE WHEN DAY(h.PriceDate) = 30 THEN h.Price END) AS d30,
+      MAX(CASE WHEN DAY(h.PriceDate) = 31 THEN h.Price END) AS d31
+      FROM (SELECT DISTINCT MaterialName, Category FROM MaterialPriceHistory) m
+      LEFT JOIN MaterialPriceHistory h
+        ON h.MaterialName = m.MaterialName
+       AND h.PriceDate >= CAST('{biz_date}-01' AS date)
+       AND h.PriceDate < DATEADD(month, 1, CAST('{biz_date}-01' AS date))
+      GROUP BY m.MaterialName, m.Category
+      ORDER BY m.Category, m.MaterialName
     editable_rows: false
   columns:
     - { key: material, label: 材料名称, type: text, readonly: true, width: 140 }
@@ -28,14 +67,19 @@ spec:
       freeze_header: true
       number_format: "#,##0"
   submit:
-    doris:
-      table: rpt.fact_material_price
+    target: mssql
+    mode: unpivot
+    mssql:
+      table: MaterialPriceHistory
+      keys: [MaterialName, PriceDate]
       mapping:
-        "param.biz_date": biz_date
-        material: material
-        category: category
-        avg: avg_price
-        "d{day}": "d{day}"
+        material: MaterialName
+        category: Category
+      pivot:
+        month_param: biz_date
+        day_cols: "d{day}"
+        date_col: PriceDate
+        value_col: Price
     lock_after: true
   push:
     - { channel: dingtalk, to: price-group, on: submit }

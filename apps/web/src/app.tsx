@@ -17,7 +17,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
     ...defaultSettings,
     rightContentRender: false,
-    menuItemRender: (item, dom) => <a>{dom}</a>,
+    menuItemRender: (item: any, dom: React.ReactNode) => <a>{dom}</a>,
     footerRender: false,
     waterMarkProps: {
       content: (initialState as any)?.name,

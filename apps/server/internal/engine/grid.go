@@ -20,6 +20,7 @@ type GridSpec struct {
 	Rows         []RowSpec             `json:"rows"`
 	RowOps       RowOps                `json:"row_ops"`
 	NumberFormat string                `json:"number_format"`
+	Editable     bool                  `json:"editable"` // false = 纯展示报表
 }
 
 type InstanceInfo struct {
@@ -50,14 +51,16 @@ func RowKeyOf(def *template.ReportDef, row map[string]any, idx int) (string, boo
 	if len(keys) > 0 {
 		var b strings.Builder
 		all := true
-		for _, k := range keys {
+		for i, k := range keys {
+			if i > 0 {
+				b.WriteByte('|')
+			}
 			s := template.AsString(row[k])
 			if s == "" {
 				all = false
 				break
 			}
 			b.WriteString(s)
-			b.WriteByte('|')
 		}
 		if all {
 			return b.String(), true

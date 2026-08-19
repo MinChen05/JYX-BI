@@ -2,21 +2,30 @@ package store
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/MinChen05/kingdee-rpt/internal/model"
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
+	gsqlserver "gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-// InitMySQL 系统库（草稿/状态/审计/模板版本）。
-func InitMySQL(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
-	})
+// InitSystemDB 系统库：dsn 以 "/" 或 ".db" 结尾 → SQLite 文件，否则 MySQL DSN。
+func InitSystemDB(dsn string) (*gorm.DB, error) {
+	var db *gorm.DB
+	var err error
+	if isSQLitePath(dsn) {
+		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Warn),
+		})
+	} else {
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Warn),
+		})
+	}
 	if err != nil {
-		return nil, fmt.Errorf("connect mysql: %w", err)
+		return nil, fmt.Errorf("connect system db: %w", err)
 	}
 	if err := db.AutoMigrate(
 		&model.RptInstance{},
@@ -29,8 +38,11 @@ func InitMySQL(dsn string) (*gorm.DB, error) {
 	return db, nil
 }
 
-// InitDoris 事实库（金蝶主数据 + 提交事实）。Doris 走 MySQL 协议。
-// 连接失败不致命：静态行模板仍可用，SQL 行集模板在运行时报错。
+func isSQLitePath(dsn string) bool {
+	return len(dsn) > 0 && (dsn[0] == '/' || len(dsn) > 3 && dsn[len(dsn)-3:] == ".db")
+}
+
+// InitDoris 事实/主数据库（MySQL 协议）。未配置返回 nil。
 func InitDoris(dsn string) (*gorm.DB, error) {
 	if dsn == "" {
 		return nil, nil
@@ -42,6 +54,21 @@ func InitDoris(dsn string) (*gorm.DB, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("connect doris: %w", err)
+	}
+	return db, nil
+}
+
+// InitMssql 生产 MSSQL（报表源表 + 写回）。未配置返回 nil。
+func InitMssql(dsn string) (*gorm.DB, error) {
+	if dsn == "" {
+		return nil, nil
+	}
+	db, err := gorm.Open(gsqlserver.Open(dsn), &gorm.Config{
+		Logger:                 logger.Default.LogMode(logger.Silent),
+		SkipDefaultTransaction: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("connect mssql: %w", err)
 	}
 	return db, nil
 }
@@ -64,7 +91,6 @@ func SaveInstance(db *gorm.DB, inst *model.RptInstance) error {
 	if inst.ID == 0 {
 		return db.Create(inst).Error
 	}
-	inst.UpdatedAt = time.Now()
 	return db.Model(&model.RptInstance{}).Where("id = ?", inst.ID).
 		Updates(map[string]any{
 			"tpl_version":  inst.TplVersion,

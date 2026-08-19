@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/MinChen05/kingdee-rpt/internal/template"
@@ -72,7 +73,36 @@ func FetchBaseRows(doris *gorm.DB, def *template.ReportDef, params map[string]st
 	if err := doris.Raw(q).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("行集查询失败: %w", err)
 	}
+	for _, r := range rows {
+		for k, v := range r {
+			r[k] = normalizeCell(v)
+		}
+	}
 	return rows, nil
+}
+
+// normalizeCell 驱动返回值统一转成 JSON 友好类型：
+// []byte（decimal 等）→ 数值/字符串；string → 去首尾空白（库里存在单空格脏数据），空 → nil。
+func normalizeCell(v any) any {
+	switch x := v.(type) {
+	case []byte:
+		s := strings.TrimSpace(string(x))
+		if s == "" {
+			return nil
+		}
+		if f, err := strconv.ParseFloat(s, 64); err == nil {
+			return f
+		}
+		return s
+	case string:
+		s := strings.TrimSpace(x)
+		if s == "" {
+			return nil
+		}
+		return s
+	default:
+		return v
+	}
 }
 
 // ReplaceTokens 通用 {param} 替换（供其他模块复用）。

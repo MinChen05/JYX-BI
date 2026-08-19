@@ -125,7 +125,7 @@ func Parse(data []byte) (Meta, []string, [][]string, error) {
 			}
 		}
 	}
-	all, err := f.GetRows(dataSheet)
+	all, err := f.GetRows(dataSheet, excelize.Options{RawCellValue: true})
 	if err != nil {
 		return Meta{}, nil, nil, err
 	}

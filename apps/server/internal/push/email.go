@@ -15,7 +15,7 @@ import (
 
 // sendEmail 发送带 xlsx 附件的邮件。支持 465(SSL) 与 587(STARTTLS/明文)。
 func sendEmail(cfg *config.Config, to, defName string, params map[string]string, xlsx []byte) error {
-	if cfg.SMTPHost == "" {
+	if cfg.SMTP.Host == "" {
 		return fmt.Errorf("smtp 未配置")
 	}
 	subject := fmt.Sprintf("【报表】%s %s", defName, paramsString(params))
@@ -47,21 +47,21 @@ func sendEmail(cfg *config.Config, to, defName string, params map[string]string,
 		return err
 	}
 
-	addr := net.JoinHostPort(cfg.SMTPHost, fmt.Sprintf("%d", cfg.SMTPPort))
+	addr := net.JoinHostPort(cfg.SMTP.Host, fmt.Sprintf("%d", cfg.SMTP.Port))
 	mailMsg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=%s\r\n\r\n%s",
-		cfg.SMTPFrom, to, subject, w.Boundary(), msg.String())
+		cfg.SMTP.From, to, subject, w.Boundary(), msg.String())
 
 	var auth smtp.Auth
-	if cfg.SMTPUser != "" {
-		auth = smtp.PlainAuth("", cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPHost)
+	if cfg.SMTP.User != "" {
+		auth = smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Pass, cfg.SMTP.Host)
 	}
 
-	if cfg.SMTPPort == 465 {
-		conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: cfg.SMTPHost})
+	if cfg.SMTP.Port == 465 {
+		conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: cfg.SMTP.Host})
 		if err != nil {
 			return err
 		}
-		client, err := smtp.NewClient(conn, cfg.SMTPHost)
+		client, err := smtp.NewClient(conn, cfg.SMTP.Host)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func sendEmail(cfg *config.Config, to, defName string, params map[string]string,
 				return err
 			}
 		}
-		if err := client.Mail(cfg.SMTPFrom); err != nil {
+		if err := client.Mail(cfg.SMTP.From); err != nil {
 			return err
 		}
 		if err := client.Rcpt(to); err != nil {
@@ -87,5 +87,5 @@ func sendEmail(cfg *config.Config, to, defName string, params map[string]string,
 		_ = wr.Close()
 		return client.Quit()
 	}
-	return smtp.SendMail(addr, auth, cfg.SMTPFrom, []string{to}, []byte(mailMsg))
+	return smtp.SendMail(addr, auth, cfg.SMTP.From, []string{to}, []byte(mailMsg))
 }

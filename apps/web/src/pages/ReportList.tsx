@@ -1,7 +1,6 @@
 import { PageContainer } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { history } from '@umijs/max';
 import { Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 
@@ -56,9 +55,7 @@ const ReportList: React.FC = () => {
       render: (_, r) => (
         <a
           onClick={() =>
-            history.push(
-              `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`,
-            )
+            (window.location.href = `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`)
           }
         >
           打开填报
@@ -80,15 +77,13 @@ const ReportList: React.FC = () => {
         pagination={false}
         actionRef={actionRef}
         request={async () => {
-          const data = await listReports();
+          const data = (await listReports()) as ReportInfo[];
           setRows(data);
           return { data, success: true };
         }}
         onRow={(r) => ({
           onClick: () =>
-            history.push(
-              `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`,
-            ),
+            (window.location.href = `/reports/${r.code}?${new URLSearchParams(defaultParams(r)).toString()}`),
           style: { cursor: 'pointer' },
         })}
       />

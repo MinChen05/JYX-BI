@@ -78,8 +78,36 @@ func Parse(raw []byte) (*ReportDef, error) {
 	if def.Spec.Rows.Source == "sql" && def.Spec.Rows.Query == "" {
 		return nil, fmt.Errorf("rows.source=sql requires rows.query")
 	}
-	if def.Spec.Rows.Source != "sql" && def.Spec.Rows.Source != "static" {
-		return nil, fmt.Errorf("rows.source must be sql|static")
+	if def.Spec.Rows.Source == "mssql" && def.Spec.Rows.Query == "" {
+		return nil, fmt.Errorf("rows.source=mssql requires rows.query")
+	}
+	if def.Spec.Rows.Source != "sql" && def.Spec.Rows.Source != "mssql" && def.Spec.Rows.Source != "static" {
+		return nil, fmt.Errorf("rows.source must be sql|mssql|static")
+	}
+	// 写回配置校验
+	st := def.Spec.Submit
+	if st.Mode != "" && st.Mode != "upsert" && st.Mode != "unpivot" {
+		return nil, fmt.Errorf("submit.mode must be upsert|unpivot")
+	}
+	if st.Target == "mssql" || (st.Target == "" && st.Mssql.Table != "") {
+		if st.Mode == "" {
+			st.Mode = "upsert"
+		}
+		if st.Mode == "unpivot" {
+			if st.Mssql.Pivot == nil {
+				return nil, fmt.Errorf("submit.mode=unpivot requires submit.mssql.pivot")
+			}
+			if st.Mssql.Pivot.DayColTpl == "" || st.Mssql.Pivot.DateCol == "" || st.Mssql.Pivot.ValueCol == "" {
+				return nil, fmt.Errorf("pivot requires day_cols/date_col/value_col")
+			}
+		} else {
+			if len(st.Mssql.Keys) == 0 {
+				return nil, fmt.Errorf("mssql upsert requires submit.mssql.keys")
+			}
+			if len(st.Mssql.Mapping) == 0 {
+				return nil, fmt.Errorf("mssql upsert requires submit.mssql.mapping")
+			}
+		}
 	}
 	for _, p := range def.Spec.Params {
 		if p.Type != "month" && p.Type != "date" && p.Type != "text" {

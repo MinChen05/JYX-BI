@@ -3,32 +3,36 @@ kind: Report
 metadata:
   code: sales_forecast_year
   name: 销售年度预测填报
-  version: 1
+  version: 2
 spec:
   params: []
   rows:
-    source: static
+    source: mssql
+    query: >
+      SELECT CAST(forecast_year AS varchar) AS year, pln_type AS ftype,
+        jan_orders AS m01, feb_orders AS m02, mar_orders AS m03, apr_orders AS m04,
+        may_orders AS m05, jun_orders AS m06, jul_orders AS m07, aug_orders AS m08,
+        sep_orders AS m09, oct_orders AS m10, nov_orders AS m11, dec_orders AS m12
+      FROM forecast_order_baseline
+      ORDER BY forecast_year
     editable_rows: true
-    static_rows:
-      - { year: 2025, ftype: "2025" }
-      - { year: 2026, ftype: "2026" }
   columns:
     - { key: seq, label: 序号, type: auto, readonly: true }
     - { key: year, label: 年度, type: int }
     - { key: ftype, label: 预测类型, type: text }
-    - { key: m01, label: 1月, type: money }
-    - { key: m02, label: 2月, type: money }
-    - { key: m03, label: 3月, type: money }
-    - { key: m04, label: 4月, type: money }
-    - { key: m05, label: 5月, type: money }
-    - { key: m06, label: 6月, type: money }
-    - { key: m07, label: 7月, type: money }
-    - { key: m08, label: 8月, type: money }
-    - { key: m09, label: 9月, type: money }
-    - { key: m10, label: 10月, type: money }
-    - { key: m11, label: 11月, type: money }
-    - { key: m12, label: 12月, type: money }
-    - { key: total, label: 合计, type: money, readonly: true, formula: "sum(m01..m12)" }
+    - { key: m01, label: 1月, type: int }
+    - { key: m02, label: 2月, type: int }
+    - { key: m03, label: 3月, type: int }
+    - { key: m04, label: 4月, type: int }
+    - { key: m05, label: 5月, type: int }
+    - { key: m06, label: 6月, type: int }
+    - { key: m07, label: 7月, type: int }
+    - { key: m08, label: 8月, type: int }
+    - { key: m09, label: 9月, type: int }
+    - { key: m10, label: 10月, type: int }
+    - { key: m11, label: 11月, type: int }
+    - { key: m12, label: 12月, type: int }
+    - { key: total, label: 合计, type: int, readonly: true, formula: "sum(m01..m12)" }
   validation:
     - { cols: ["year"], rule: "v >= 2020 && v <= 2035" }
     - { cols: ["m01..m12"], rule: "v >= 0" }
@@ -42,24 +46,28 @@ spec:
       freeze_header: true
       number_format: "#,##0"
   submit:
-    doris:
-      table: rpt.fact_forecast_year
+    target: mssql
+    mode: upsert
+    mssql:
+      table: forecast_order_baseline
+      keys: [pln_type, forecast_year]
       mapping:
-        year: year
-        ftype: ftype
-        "m01": m01
-        "m02": m02
-        "m03": m03
-        "m04": m04
-        "m05": m05
-        "m06": m06
-        "m07": m07
-        "m08": m08
-        "m09": m09
-        "m10": m10
-        "m11": m11
-        "m12": m12
-        total: total
+        ftype: pln_type
+        year: forecast_year
+        "m01": jan_orders
+        "m02": feb_orders
+        "m03": mar_orders
+        "m04": apr_orders
+        "m05": may_orders
+        "m06": jun_orders
+        "m07": jul_orders
+        "m08": aug_orders
+        "m09": sep_orders
+        "m10": oct_orders
+        "m11": nov_orders
+        "m12": dec_orders
+        total: total_orders
+        "now()": update_time
     lock_after: true
   push:
     - { channel: dingtalk, to: sales-group, on: submit }

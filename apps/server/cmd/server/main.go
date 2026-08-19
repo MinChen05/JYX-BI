@@ -27,33 +27,44 @@ func main() {
 	if err != nil {
 		log.Fatalf("配置加载失败: %v", err)
 	}
-	if cfg.MySQLDSN == "" {
-		log.Fatal("config.ini 缺少 mysql.dsn")
+	if cfg.System.DSN == "" {
+		log.Fatal("config.ini 缺少 system.dsn（SQLite 路径或 MySQL DSN）")
 	}
-	mysqlDB, err := store.InitMySQL(cfg.MySQLDSN)
+	systemDB, err := store.InitSystemDB(cfg.System.DSN)
 	if err != nil {
-		log.Fatalf("MySQL 初始化失败: %v", err)
+		log.Fatalf("系统库初始化失败: %v", err)
 	}
-	dorisDB, err := store.InitDoris(cfg.DorisDSN)
+	dorisDB, err := store.InitDoris(cfg.Doris.DSN)
 	if err != nil {
 		log.Fatalf("Doris 初始化失败: %v", err)
 	}
 	if dorisDB == nil {
-		log.Println("警告: 未配置 doris.dsn，SQL 行集模板不可用")
+		log.Println("提示: 未配置 doris.dsn（仅 SQL 行集模板会不可用）")
+	}
+	mssqlDSN, err := cfg.MssqlDSN()
+	if err != nil {
+		log.Fatalf("MSSQL 配置错误: %v", err)
+	}
+	mssqlDB, err := store.InitMssql(mssqlDSN)
+	if err != nil {
+		log.Fatalf("MSSQL 初始化失败: %v", err)
+	}
+	if mssqlDB == nil {
+		log.Println("提示: 未配置 sqlserver 段（mssql 行集/写回模板会不可用）")
 	}
 
-	eng, err := template.NewEngine(cfg.TplDir)
+	eng, err := template.NewEngine(cfg.Templates.Dir)
 	if err != nil {
 		log.Fatalf("模板加载失败: %v", err)
 	}
 	log.Printf("已加载 %d 个报表模板: %v", len(eng.Codes()), eng.Codes())
-	registerTemplates(mysqlDB, eng)
+	registerTemplates(systemDB, eng)
 
-	svc := service.New(cfg, mysqlDB, dorisDB, eng, push.NewPusher(cfg))
-	router := httpapi.NewRouter(svc, cfg.ServerMode, version)
+	svc := service.New(cfg, systemDB, dorisDB, mssqlDB, eng, push.NewPusher(cfg))
+	router := httpapi.NewRouter(svc, cfg.Server.Mode, version)
 
-	srv := &http.Server{Addr: cfg.ServerAddr, Handler: router}
-	log.Printf("kingdee-rpt %s 监听 %s", version, cfg.ServerAddr)
+	srv := &http.Server{Addr: cfg.Server.Addr, Handler: router}
+	log.Printf("kingdee-rpt %s 监听 %s", version, cfg.Server.Addr)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("服务退出: %v", err)
 	}

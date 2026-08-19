@@ -36,7 +36,7 @@ type ParamDef struct {
 }
 
 type RowsDef struct {
-	Source       string         `yaml:"source"` // sql | static
+	Source       string         `yaml:"source"` // sql(Doris) | mssql | static
 	Query        string         `yaml:"query"`
 	EditableRows bool           `yaml:"editable_rows"`
 	StaticRows   []map[string]any `yaml:"static_rows"`
@@ -80,14 +80,34 @@ type ExportLayout struct {
 }
 
 type SubmitDef struct {
-	Doris     DorisDef `yaml:"doris"`
+	Target    string    `yaml:"target"` // doris | mssql；缺省按 DorisDef 存在与否判断
+	Mode      string    `yaml:"mode"`   // upsert(缺省) | unpivot(宽表→长表)
+	Doris     DorisDef  `yaml:"doris"`
+	Mssql    MssqlWrite `yaml:"mssql"`
 	LockAfter bool     `yaml:"lock_after"`
 }
 
-// DorisDef 提交写回配置。mapping 支持 day.{day} 模板（按动态列展开）。
+// DorisDef 提交写回配置。mapping 支持动态列模板与 "param.x" / "now()" 特殊源。
 type DorisDef struct {
 	Table   string            `yaml:"table"`
 	Mapping map[string]string `yaml:"mapping"`
+}
+
+// MssqlWrite MSSQL 写回配置。
+// upsert: keys 为匹配列（目标表列名），值取自 mapping 的源列。
+// unpivot: 每个日列的非空值展开为一行长表记录。
+type MssqlWrite struct {
+	Table  string            `yaml:"table"`
+	Keys   []string          `yaml:"keys"`
+	Mapping map[string]string `yaml:"mapping"` // 网格列/param.x/now() → 目标列（unpivot 时用于行级静态字段）
+	Pivot  *PivotDef         `yaml:"pivot"`    // mode=unpivot 必填
+}
+
+type PivotDef struct {
+	MonthParam string `yaml:"month_param"` // 月份参数名，缺省 biz_date
+	DayColTpl  string `yaml:"day_cols"`    // 如 d{day}，与动态列 key 同构
+	DateCol    string `yaml:"date_col"`    // 目标日期列
+	ValueCol   string `yaml:"value_col"`   // 目标值列
 }
 
 type PushDef struct {

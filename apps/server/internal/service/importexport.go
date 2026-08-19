@@ -307,15 +307,28 @@ func parseCell(s, colType string) any {
 }
 
 func valueEqual(a, b any) bool {
-	if a == nil && b == nil {
-		return true
+	// nil 与空字符串视为同义
+	if a == nil || template.AsString(a) == "" {
+		return b == nil || template.AsString(b) == ""
 	}
-	if a == nil || b == nil {
+	if b == nil || template.AsString(b) == "" {
 		return false
 	}
 	if fa, ok := toFloat(a); ok {
 		if fb, ok2 := toFloat(b); ok2 {
-			return fa == fb
+			// xlsx 存储精度有限，浮点比较带相对容差
+			diff := fa - fb
+			if diff < 0 {
+				diff = -diff
+			}
+			scale := fb
+			if scale < 1 {
+				scale = 1
+			}
+			if diff <= 1e-9*fa || diff <= 1e-9*scale {
+				return true
+			}
+			return false
 		}
 	}
 	return template.AsString(a) == template.AsString(b)
@@ -331,6 +344,9 @@ func toFloat(v any) (float64, bool) {
 		return float64(x), true
 	case int64:
 		return float64(x), true
+	case string:
+		f, err := strconv.ParseFloat(strings.TrimSpace(x), 64)
+		return f, err == nil
 	}
 	return 0, false
 }

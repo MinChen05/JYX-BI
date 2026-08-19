@@ -34,7 +34,7 @@ func TestRoundTrip(t *testing.T) {
 	if len(headers) != 3 || len(dataRows) != 2 {
 		t.Fatalf("shape = %d headers, %d rows", len(headers), len(dataRows))
 	}
-	if dataRows[0][0] != "40Cr" || dataRows[0][1] != "3,760" { // GetRows 返回格式化字符串
+	if dataRows[0][0] != "40Cr" || dataRows[0][1] != "3760" { // 原始值（RawCellValue），非格式化字符串
 		t.Errorf("row0 = %v", dataRows[0])
 	}
 	if dataRows[1][1] != "" { // nil 导出为空

@@ -17,14 +17,14 @@ import (
 
 // sendDingTalk 群机器人 markdown 通知（支持加签）。
 func sendDingTalk(cfg *config.Config, def *template.ReportDef, params map[string]string) error {
-	if cfg.DingWebhook == "" {
+	if cfg.DingTalk.Webhook == "" {
 		return fmt.Errorf("dingtalk webhook 未配置")
 	}
-	u := cfg.DingWebhook
-	if cfg.DingSecret != "" {
+	u := cfg.DingTalk.Webhook
+	if cfg.DingTalk.Secret != "" {
 		ts := fmt.Sprintf("%d", time.Now().UnixMilli())
-		mac := hmac.New(sha256.New, []byte(cfg.DingSecret))
-		mac.Write([]byte(ts + "\n" + cfg.DingSecret))
+		mac := hmac.New(sha256.New, []byte(cfg.DingTalk.Secret))
+		mac.Write([]byte(ts + "\n" + cfg.DingTalk.Secret))
 		sign := url.QueryEscape(base64.StdEncoding.EncodeToString(mac.Sum(nil)))
 		sep := "&"
 		if !bytes.Contains([]byte(u), []byte("?")) {

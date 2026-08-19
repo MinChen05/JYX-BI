@@ -35,6 +35,7 @@ export interface GridSpec {
   rows: RowSpec[];
   row_ops: RowOps;
   number_format: string;
+  editable: boolean; // false = 纯展示报表
 }
 
 export interface ParamDef {
