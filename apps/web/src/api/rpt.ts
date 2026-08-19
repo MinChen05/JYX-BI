@@ -7,7 +7,7 @@ import type {
   Issue,
   ReportInfo,
   RowPayload,
-} from '@kingdee-rpt/rpt-types';
+} from '@jyx-bi/rpt-types';
 
 function qs(params: Record<string, string>) {
   const p = new URLSearchParams();

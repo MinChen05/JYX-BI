@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MinChen05/kingdee-rpt/internal/engine"
-	"github.com/MinChen05/kingdee-rpt/internal/model"
-	"github.com/MinChen05/kingdee-rpt/internal/store"
-	"github.com/MinChen05/kingdee-rpt/internal/template"
-	"github.com/MinChen05/kingdee-rpt/pkg/xlsxio"
+	"github.com/MinChen05/JYX-BI/internal/engine"
+	"github.com/MinChen05/JYX-BI/internal/model"
+	"github.com/MinChen05/JYX-BI/internal/store"
+	"github.com/MinChen05/JYX-BI/internal/template"
+	"github.com/MinChen05/JYX-BI/pkg/xlsxio"
 )
 
 // CellDiff 导入变更明细。

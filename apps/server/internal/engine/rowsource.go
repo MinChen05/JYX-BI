@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/template"
 	"gorm.io/gorm"
 )
 

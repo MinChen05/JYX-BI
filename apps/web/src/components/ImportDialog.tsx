@@ -11,7 +11,7 @@ import {
 import React, { useState } from 'react';
 
 import { importFile } from '../api/rpt';
-import type { ImportReport } from '@kingdee-rpt/rpt-types';
+import type { ImportReport } from '@jyx-bi/rpt-types';
 
 interface Props {
   open: boolean;

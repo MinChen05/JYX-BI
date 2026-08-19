@@ -1,4 +1,4 @@
-module github.com/MinChen05/kingdee-rpt
+module github.com/MinChen05/JYX-BI
 
 go 1.25.7
 

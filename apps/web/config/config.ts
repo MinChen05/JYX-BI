@@ -10,7 +10,7 @@ const { UMI_ENV = 'dev' } = process.env;
 
 export default defineConfig({
   alias: {
-    '@kingdee-rpt/rpt-types': join(__dirname, '../../../packages/rpt-types/src'),
+    '@jyx-bi/rpt-types': join(__dirname, '../../../packages/rpt-types/src'),
   },
   hash: true,
   publicPath: '/',

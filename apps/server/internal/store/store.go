@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 
-	"github.com/MinChen05/kingdee-rpt/internal/model"
+	"github.com/MinChen05/JYX-BI/internal/model"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	gsqlserver "gorm.io/driver/sqlserver"

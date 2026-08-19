@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/template"
 )
 
 // 前端/导入共用的网格契约。

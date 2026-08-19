@@ -2,7 +2,7 @@ import { DatePicker, Space, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
 
-import type { ParamDef } from '@kingdee-rpt/rpt-types';
+import type { ParamDef } from '@jyx-bi/rpt-types';
 
 interface Props {
   params: ParamDef[];

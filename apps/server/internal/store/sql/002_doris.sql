@@ -1,4 +1,4 @@
--- kingdee-rpt 事实库（Doris 2.x，库名与 kingdeesync 的 Doris 集群一致，可单独建 rpt 库）
+-- JYX-BI 事实库（Doris 2.x，库名与 kingdeesync 的 Doris 集群一致，可单独建 rpt 库）
 -- Unique Key 模型：重复提交 = 按 key 覆盖。
 CREATE DATABASE IF NOT EXISTS rpt;
 

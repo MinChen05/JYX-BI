@@ -32,8 +32,8 @@ import type {
   Issue,
   ReportInfo,
   RowPayload,
-} from '@kingdee-rpt/rpt-types';
-import { STATUS_TEXT } from '@kingdee-rpt/rpt-types';
+} from '@jyx-bi/rpt-types';
+import { STATUS_TEXT } from '@jyx-bi/rpt-types';
 
 /**
  * 通用填报页：完全由 GridSpec 驱动，不感知具体报表。

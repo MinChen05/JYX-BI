@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/MinChen05/kingdee-rpt/internal/service"
+	"github.com/MinChen05/JYX-BI/internal/service"
 
-	"github.com/MinChen05/kingdee-rpt/internal/engine"
+	"github.com/MinChen05/JYX-BI/internal/engine"
 )
 
 func (d *deps) respondOK(c *gin.Context, data any) {

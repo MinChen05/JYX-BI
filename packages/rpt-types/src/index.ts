@@ -1,4 +1,4 @@
-// kingdee-rpt 前后端共享类型（与服务端 GridSpec/ImportReport 契约一致）
+// JYX-BI 前后端共享类型（与服务端 GridSpec/ImportReport 契约一致）
 
 export interface ColumnSpec {
   key: string;

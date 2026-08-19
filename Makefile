@@ -19,7 +19,7 @@ build:
 	cd $(WEB) && npm ci && npm run build
 	cd $(SERVER) && CGO_ENABLED=0 go build -trimpath \
 		-ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" \
-		-o bin/kingdee-rpt ./cmd/server
+		-o bin/jyx-bi ./cmd/server
 
 docker:
-	docker build -f deploy/Dockerfile -t kingdee-rpt:dev .
+	docker build -f deploy/Dockerfile -t jyx-bi:dev .

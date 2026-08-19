@@ -3,7 +3,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: kingdee-rpt:dev
+    image: jyx-bi:dev
     ports:
       - "8090:8090"
     volumes:

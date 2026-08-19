@@ -1,4 +1,4 @@
--- kingdee-rpt 系统库（MySQL 8.0）
+-- JYX-BI 系统库（MySQL 8.0）
 -- GORM AutoMigrate 会自动建表，此文件为参考/手工建库用。
 CREATE DATABASE IF NOT EXISTS kingdee_rpt DEFAULT CHARACTER SET utf8mb4;
 USE kingdee_rpt;

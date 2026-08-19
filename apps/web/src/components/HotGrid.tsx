@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from 'react';
 
-import type { ColumnSpec, RowOps } from '@kingdee-rpt/rpt-types';
+import type { ColumnSpec, RowOps } from '@jyx-bi/rpt-types';
 
 export interface GridHandle {
   /** 取当前网格全部数据（行序 = rowKeys 顺序） */

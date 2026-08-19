@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/MinChen05/kingdee-rpt/internal/config"
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/config"
+	"github.com/MinChen05/JYX-BI/internal/template"
 )
 
 // Pusher 提交后推送（邮件/钉钉）。

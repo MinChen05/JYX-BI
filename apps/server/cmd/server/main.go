@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/MinChen05/kingdee-rpt/internal/config"
-	"github.com/MinChen05/kingdee-rpt/internal/httpapi"
-	"github.com/MinChen05/kingdee-rpt/internal/model"
-	"github.com/MinChen05/kingdee-rpt/internal/push"
-	"github.com/MinChen05/kingdee-rpt/internal/service"
-	"github.com/MinChen05/kingdee-rpt/internal/store"
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/config"
+	"github.com/MinChen05/JYX-BI/internal/httpapi"
+	"github.com/MinChen05/JYX-BI/internal/model"
+	"github.com/MinChen05/JYX-BI/internal/push"
+	"github.com/MinChen05/JYX-BI/internal/service"
+	"github.com/MinChen05/JYX-BI/internal/store"
+	"github.com/MinChen05/JYX-BI/internal/template"
 	"gorm.io/gorm"
 )
 
@@ -64,7 +64,7 @@ func main() {
 	router := httpapi.NewRouter(svc, cfg.Server.Mode, version)
 
 	srv := &http.Server{Addr: cfg.Server.Addr, Handler: router}
-	log.Printf("kingdee-rpt %s 监听 %s", version, cfg.Server.Addr)
+	log.Printf("jyx-bi %s 监听 %s", version, cfg.Server.Addr)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("服务退出: %v", err)
 	}

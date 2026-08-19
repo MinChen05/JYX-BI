@@ -10,7 +10,7 @@ import (
 	"net/textproto"
 	"strings"
 
-	"github.com/MinChen05/kingdee-rpt/internal/config"
+	"github.com/MinChen05/JYX-BI/internal/config"
 )
 
 // sendEmail 发送带 xlsx 附件的邮件。支持 465(SSL) 与 587(STARTTLS/明文)。

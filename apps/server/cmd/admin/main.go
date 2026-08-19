@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/template"
 )
 
 // admin 运维小工具。

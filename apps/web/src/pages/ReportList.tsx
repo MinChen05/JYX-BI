@@ -5,8 +5,8 @@ import { Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 
 import { listReports } from '../api/rpt';
-import type { ReportInfo } from '@kingdee-rpt/rpt-types';
-import { STATUS_TEXT } from '@kingdee-rpt/rpt-types';
+import type { ReportInfo } from '@jyx-bi/rpt-types';
+import { STATUS_TEXT } from '@jyx-bi/rpt-types';
 
 /** 参数默认值：month 取当前月 */
 function defaultParams(info: ReportInfo): Record<string, string> {

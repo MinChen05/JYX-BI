@@ -3,7 +3,7 @@ package httpapi
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/MinChen05/kingdee-rpt/internal/service"
+	"github.com/MinChen05/JYX-BI/internal/service"
 )
 
 type deps struct {

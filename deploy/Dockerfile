@@ -16,13 +16,13 @@ COPY apps/server/ ./
 COPY templates/ /build/templates/
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
-    -o /out/kingdee-rpt ./cmd/server
+    -o /out/jyx-bi ./cmd/server
 
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 WORKDIR /app
-COPY --from=server /out/kingdee-rpt /app/kingdee-rpt
+COPY --from=server /out/jyx-bi /app/jyx-bi
 COPY --from=web /build/web/dist /app/web-dist
 COPY templates/ /app/templates
 EXPOSE 8090
-ENTRYPOINT ["/app/kingdee-rpt", "-config", "/app/config.ini"]
+ENTRYPOINT ["/app/jyx-bi", "-config", "/app/config.ini"]

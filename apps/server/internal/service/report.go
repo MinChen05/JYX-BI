@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MinChen05/kingdee-rpt/internal/config"
-	"github.com/MinChen05/kingdee-rpt/internal/engine"
-	"github.com/MinChen05/kingdee-rpt/internal/model"
-	"github.com/MinChen05/kingdee-rpt/internal/push"
-	"github.com/MinChen05/kingdee-rpt/internal/store"
-	"github.com/MinChen05/kingdee-rpt/internal/template"
+	"github.com/MinChen05/JYX-BI/internal/config"
+	"github.com/MinChen05/JYX-BI/internal/engine"
+	"github.com/MinChen05/JYX-BI/internal/model"
+	"github.com/MinChen05/JYX-BI/internal/push"
+	"github.com/MinChen05/JYX-BI/internal/store"
+	"github.com/MinChen05/JYX-BI/internal/template"
 	"gorm.io/gorm"
 )
 
