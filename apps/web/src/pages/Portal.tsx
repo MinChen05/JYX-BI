@@ -1,6 +1,5 @@
 import { FileTextOutlined, FolderFilled, LinkOutlined } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
-import { Card, Empty, Space, Tree, Typography } from 'antd';
+import { Empty, Space, Tree, Typography } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { listReports } from '../api/rpt';
@@ -17,6 +16,7 @@ type TreeNode = {
 
 /**
  * 报表门户：左侧目录树（板块分组）+ 右侧内嵌填报页，操作对齐帆软报表目录。
+ * 全幅白底无卡片：左树通到顶，一根分隔线，右侧内容区撑满。
  */
 const Portal: React.FC = () => {
   const [reports, setReports] = useState<ReportInfo[]>([]);
@@ -54,65 +54,82 @@ const Portal: React.FC = () => {
     if (r) setSelected(r);
   };
 
-  const src = selected
+  const embedUrl = selected
     ? `/embed/${selected.code}?${new URLSearchParams(defaultParams(selected)).toString()}`
     : '';
 
   return (
-    <PageContainer
-      title="报表门户"
-      content="从左侧目录选择报表，右侧打开填报"
-      style={{ paddingBottom: 0 }}
-    >
-      <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 210px)', minHeight: 420 }}>
-        <Card size="small" style={{ width: 260, flexShrink: 0 }} bodyStyle={{ padding: 8, overflow: 'auto' }}>
-          {treeData.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无报表" />
-          ) : (
-            <Tree
-              blockNode
-              defaultExpandAll
-              showIcon
-              treeData={treeData}
-              onSelect={onSelect}
-              selectedKeys={selected ? [`r:${selected.code}`] : []}
-            />
-          )}
-        </Card>
-        <Card size="small" style={{ flex: 1, minWidth: 0 }} bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {selected ? (
-            <>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '6px 12px',
-                  borderBottom: '1px solid #f0f0f0',
-                }}
-              >
-                <Typography.Text strong>{selected.name}</Typography.Text>
-                <Space>
-                  <a href={`/reports/${selected.code}?${new URLSearchParams(defaultParams(selected)).toString()}`} target="_blank" rel="noreferrer">
-                    <LinkOutlined /> 新标签页打开
-                  </a>
-                </Space>
-              </div>
-              <iframe
-                key={selected.code}
-                src={src}
-                title={selected.name}
-                style={{ flex: 1, width: '100%', border: 'none', minHeight: 380 }}
-              />
-            </>
-          ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Empty description="请从左侧目录选择报表" />
-            </div>
-          )}
-        </Card>
+    <div style={{ display: 'flex', height: 'calc(100vh - 56px)', background: '#fff' }}>
+      {/* 左侧目录树 */}
+      <div
+        style={{
+          width: 250,
+          flexShrink: 0,
+          borderRight: '1px solid #f0f0f0',
+          padding: '12px 8px',
+          overflow: 'auto',
+        }}
+      >
+        {treeData.length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无报表" />
+        ) : (
+          <Tree
+            blockNode
+            defaultExpandAll
+            showIcon
+            treeData={treeData}
+            onSelect={onSelect}
+            selectedKeys={selected ? [`r:${selected.code}`] : []}
+          />
+        )}
       </div>
-    </PageContainer>
+      {/* 右侧内容区 */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {selected ? (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 16px',
+                borderBottom: '1px solid #f0f0f0',
+                flexShrink: 0,
+              }}
+            >
+              <Typography.Text strong>{selected.name}</Typography.Text>
+              <Space>
+                <a
+                  href={`/reports/${selected.code}?${new URLSearchParams(defaultParams(selected)).toString()}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <LinkOutlined /> 新标签页打开
+                </a>
+              </Space>
+            </div>
+            <iframe
+              key={selected.code}
+              src={embedUrl}
+              title={selected.name}
+              style={{ flex: 1, width: '100%', border: 'none' }}
+            />
+          </>
+        ) : (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#fafafa',
+            }}
+          >
+            <Empty description="请从左侧目录选择报表" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
