@@ -29,10 +29,10 @@ type Spec struct {
 }
 
 type ParamDef struct {
-	Key      string `yaml:"key"`
-	Label    string `yaml:"label"`
-	Type     string `yaml:"type"` // month | date | text
-	Required bool   `yaml:"required"`
+	Key      string `yaml:"key" json:"key"`
+	Label    string `yaml:"label" json:"label"`
+	Type     string `yaml:"type" json:"type"` // month | date | text
+	Required bool   `yaml:"required" json:"required"`
 }
 
 type RowsDef struct {
