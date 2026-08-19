@@ -22,6 +22,12 @@
 - 网格契约类型在 `internal/engine/grid.go`（GridSpec/RowSpec），与 `packages/rpt-types/src/index.ts` 保持字段一致
 - 新增 API：`internal/httpapi/handler.go` 加 handler + `router.go` 挂路由
 
+## 前端坑
+
+- config.ts 必须保留 `initialState: {}`：initial-state 插件是 `enableBy: config`，漏掉这个 key 时 app.tsx 的 `getInitialState` 运行时注册失败（"invalid key getInitialState"），整页白屏
+- 改了前端依赖/配置后先 `npx max setup` 重新生成 src/.umi 再跑 tsc
+- dev 端口若被占（8001 在 linux10 被容器占用），用 `PORT=8002 npx max dev` 覆盖；新端口要加进 firewalld（`firewall-cmd --permanent --add-port`）Mac 才访问得到
+
 ## 提交习惯
 
 - 中文 commit message，conventional 前缀（feat/fix/docs/refactor）

@@ -18,6 +18,9 @@ export default defineConfig({
   ignoreMomentLocale: true,
   proxy: proxy[UMI_ENV as keyof typeof proxy],
   antd: {},
+  // initial-state 插件 enableBy:config，必须声明该 key 才启用；
+  // 否则 app.tsx 的 getInitialState 运行时注册失败，整页白屏
+  initialState: {},
   model: {},
   request: {},
   layout: {
